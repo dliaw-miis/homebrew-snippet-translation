@@ -7,13 +7,15 @@ window.onload = () => {
     "LABEL", "MAP", "MARK", "METER", "NOSCRIPT", "OBJECT", "OUTPUT",
     "PICTURE", "PROGRESS", "Q", "RUBY", "S", "SAMP", "SCRIPT",
     "SELECT", "SLOT", "SMALL", "SPAN", "STRONG", "SUB", "SUP", "SVG",
-    "TEMPLATE", "TEXTAREA", "TIME", "U", "TT", "VAR", "VIDEO", "WBR"]
+    "TEMPLATE", "TEXTAREA", "TIME", "U", "TT", "VAR", "VIDEO", "WBR"
+  ]
 
-  function fetchTextNodes() {
+  // Ignore all-whitespace node groups
+  function getTextNodes() {
     var walker = document.createTreeWalker(
       document.body,
       NodeFilter.SHOW_TEXT,
-      null
+      { acceptNode: (node) => node.wholeText.trim().length > 0 }
     );
 
     var walkedNodes = [];
@@ -24,14 +26,20 @@ window.onload = () => {
     return walkedNodes
   }
 
-  function fetchTextBlockParentNodes(textNodes) {
+  /**
+   * Get closest block-level parent of each text node
+   * @param {*} textNodes 
+   * @returns 
+   */
+  function getTextBlockParentNodes(textNodes) {
     let parentNodes = []
-    for (let tNode of textNodes) {
+    for (const tNode of textNodes) {
       let parent = tNode.parentNode
-      while (inlineTagNames.includes(parent.tagName)) {
+      while (inlineTagnames.includes(parent.tagName)) {
         parent = parent.parentNode
       }
-      if (!parentNodes.includes(parent)) {
+      if (parent.textContent.trim().length > 0 && !parentNodes.includes(parent)) {
+        // console.log(tNode, parent)
         parentNodes.push(parent)
       }
     }
@@ -39,8 +47,36 @@ window.onload = () => {
     return parentNodes
   }
 
+  function removeAttributes(element) {
+    while (element.attributes.length > 0) {
+      element.removeAttribute(element.attributes[0].name);
+    }
+  }
+
+  /**
+   * Construct a string consisting of element tagnames and text in traversal order.
+   * Ignore comments
+   */
+  function getHtmlElementHashstring(htmlNode) {
+    let nodeList = [htmlNode]
+    let hashComponents = []
+    let i = 0;
+    while (i < nodeList.length) {
+      let element = nodeList[i]
+      if (element.nodeType === Node.ELEMENT_NODE) {
+        hashComponents.push(element.tagName)
+        nodeList.push(...element.childNodes)
+      } else if (element.nodeType === Node.TEXT_NODE) {
+        hashComponents.push(element.textContent)
+      }
+      i++;
+    }
+
+    return hashComponents.join(',')
+  }
+
   function getTextGroups() {
-    let textNodes = fetchTextNodes()
+    let textNodes = getTextNodes()
     let textGroups = []
     let currentTextGroup = []
     let groupParent = null
@@ -87,5 +123,15 @@ window.onload = () => {
     return textGroups
   }
 
-  console.log(getTextGroups())
+  function main() {
+    const textNodes = getTextNodes()
+    const parentNodes = getTextBlockParentNodes(textNodes)
+    console.log(parentNodes)
+    
+    for (const pNode of parentNodes) {
+      console.log(getHtmlElementHashstring(pNode))
+    }
+  }
+
+  main()
 }
