@@ -1,3 +1,6 @@
+import JsonDataConnector from "./JsonDataConnector.js"
+
+
 window.onload = () => {
 
   let inlineTagnames = [
@@ -127,6 +130,9 @@ window.onload = () => {
     const textNodes = getTextNodes()
     const parentNodes = getTextBlockParentNodes(textNodes)
     console.log(parentNodes)
+
+    const connector = new JsonDataConnector()
+    const data = connector.getWebsiteData(window.location.origin + window.location.pathname)
     
     for (const pNode of parentNodes) {
       console.log(getHtmlElementHashstring(pNode))
