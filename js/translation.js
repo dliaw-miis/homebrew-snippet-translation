@@ -129,14 +129,26 @@ window.onload = () => {
   function main() {
     const textNodes = getTextNodes()
     const parentNodes = getTextBlockParentNodes(textNodes)
-    console.log(parentNodes)
+    // console.log(parentNodes)
 
     const connector = new JsonDataConnector()
     const data = connector.getWebsiteData(window.location.origin + window.location.pathname)
+
+    const pageUrl = "http://127.0.0.1:3000/test_page/Home%20Page.htm"
+    let dataObject = {}
+    dataObject[pageUrl] = {}
     
     for (const pNode of parentNodes) {
-      console.log(getHtmlElementHashstring(pNode))
+      let nodeHash = getHtmlElementHashstring(pNode)
+      dataObject[pageUrl][nodeHash] = {
+        textContent: pNode.textContent,
+        translation: {
+          ja: pNode.outerHTML
+        }
+      }
     }
+
+    console.log(dataObject)
   }
 
   main()
